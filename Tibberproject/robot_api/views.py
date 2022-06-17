@@ -17,5 +17,6 @@ def enter_path(request):
     result = calculate_result(body['start'], body['commands'])
     end_time = time() - start_time
     #insert into db
+    #INSERT INTO executions values(datetime.now(), len(body['commands']), result,    end_time)
     #return record 
     return HttpResponse(f"it took {end_time} to calc and result was {result}")

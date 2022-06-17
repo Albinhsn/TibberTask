@@ -1,0 +1,28 @@
+
+version: "3.3"
+
+
+services:
+        db:
+                image: postgres
+                volumes:
+                        - ./data/db:/var/lib/postgresql/data
+                environment:
+                        - POSTGRES_DB=postgres
+                        - POSTGRES_USER=postgres
+                        - POSTGRES_PASSWORD=postgres
+        robot_api:
+                build:
+                        context: .
+                        dockerfile: ./Dockerfile                        
+                command: bash -c  "cd Tibberproject && python3 manage.py runserver 0.0.0.0:5000"
+                ports: 
+                        - "5000:5000"
+                environment:
+                        - POSTGRES_NAME=postgres
+                        - POSTGRES_USER=postgres
+                        - POSTGRES_PASSWORD=postgres
+                depends_on: 
+                        - db
+
+                      
