@@ -3,8 +3,7 @@ from django.db import models
 # Create your models here.
 
 
-class Execution(models.model):
-    id = models.IntegerField()
+class Execution(models.Model):
     timestamp = models.DateField()
     commands = models.IntegerField()
     result = models.IntegerField()
