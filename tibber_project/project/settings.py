@@ -49,8 +49,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-ROOT_URLCONF = 'Tibberproject.urls'
+#Tibberproject
+ROOT_URLCONF = 'project.urls'
 
 TEMPLATES = [
     {
@@ -67,8 +67,8 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = 'Tibberproject.wsgi.application'
+#Tibberproject
+WSGI_APPLICATION = 'project.wsgi.application'
 
 
 # Database

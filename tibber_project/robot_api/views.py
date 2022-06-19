@@ -4,24 +4,30 @@ from django.shortcuts import render
 
 from django.http import JsonResponse, HttpResponse, HttpResponseNotFound
 from django.views.decorators.csrf import csrf_exempt
-from utils import calculate_result, parse_body_from_request
+
 from time import time
 from datetime import datetime
-from robot_api.models import Execution 
 from json import dumps, loads 
 
-@csrf_exempt
+from utils import parse_body_from_request
+from robot_api.utils import calculate_result, execution_insert_to_json
+from robot_api.models import Execution 
+
+
+@csrf_exempt #Remove if in prod
 def enter_path(request):
+
+    #Might need to change this if other request methods on same url needs to be implemented 
     if request.method != "POST":
         return HttpResponseNotFound("")
+    
     #get content from body
     body = parse_body_from_request(request)
 
-    #calc result 
+    #calculates the result 
     start_time = time() 
     result = calculate_result(body['start'], body['commands'])
-    #Changes from scientific format to decimal 
-    end_time ="{:f}".format(time() - start_time)
+    end_time =time() - start_time
     
     #insert into db
     exe = Execution.objects.create(
@@ -30,14 +36,17 @@ def enter_path(request):
         result=result,
         duration=end_time
     )
-    
-    #Transform object into dict
-    exe = exe.__dict__
-    del exe['_state']
-    exe['timestamp'] = exe['timestamp'].isoformat()
-    
-    #Transform dict into json 
-    exe = loads(dumps(exe))
+
+    #transform insert object into json response
+    response = execution_insert_to_json(exe)
 
     #return record
-    return JsonResponse(exe, safe=False)
+    return JsonResponse(response) 
+
+
+def get_all(request):
+    objs = list(Execution.objects.values())
+    for idx in range(len(objs)):
+        objs[idx]['timestamp'] = objs[idx]['timestamp'].isoformat()
+    objs = loads(dumps(objs))
+    return JsonResponse(objs, safe=False)

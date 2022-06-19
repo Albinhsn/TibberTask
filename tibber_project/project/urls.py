@@ -18,5 +18,6 @@ from django.urls import path
 from robot_api import views as robot_views
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('tibber-developer-test/enter-path', robot_views.enter_path)
+    path('tibber-developer-test/enter-path', robot_views.enter_path),
+    path('all', robot_views.get_all)    
 ]

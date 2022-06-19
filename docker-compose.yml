@@ -17,7 +17,7 @@ services:
                 build:
                         context: .
                         dockerfile: ./Dockerfile                        
-                command: bash -c  "cd Tibberproject && python3 manage.py migrate  && python3 manage.py runserver 0.0.0.0:5000"
+                command: bash -c  "cd tibber_project && python3 manage.py migrate  && python3 manage.py runserver 0.0.0.0:5000"
                 ports: 
                         - "5000:5000"
                 environment:
