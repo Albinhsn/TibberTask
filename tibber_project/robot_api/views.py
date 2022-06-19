@@ -20,6 +20,7 @@ def enter_path(request):
     #Might need to change this if other request methods on same url needs to be implemented 
     if request.method != "POST":
         return HttpResponseNotFound("")
+
     
     #get content from body
     body = parse_body_from_request(request)
@@ -46,7 +47,11 @@ def enter_path(request):
 
 def get_all(request):
     objs = list(Execution.objects.values())
+    print(objs)
     for idx in range(len(objs)):
+        print(objs[idx]['timestamp'].isoformat())
         objs[idx]['timestamp'] = objs[idx]['timestamp'].isoformat()
+        objs[idx]['duration'] = "{:f}".format(objs[idx]['duration'])
+
     objs = loads(dumps(objs))
     return JsonResponse(objs, safe=False)

@@ -36,10 +36,10 @@ def execution_insert_to_json(exe):
     #Remove state key
     if '_state' in exe:
         del exe['_state']
-
-    #Changes from date format to iso, will break json serializer if removed
-    if 'timestamp' in exe:
-        exe['timestamp']=exe['timestamp'].isoformat()
+    
+    #Changes datetime to string format 
+    exe['timestamp'] = str(exe['timestamp'])
+    
     #Changes duration from scientific notation (1e^-5) to decimal
     exe['duration'] = "{:f}".format(exe['duration'])
 

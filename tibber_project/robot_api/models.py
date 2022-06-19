@@ -4,7 +4,7 @@ from django.db import models
 
 
 class Execution(models.Model):
-    timestamp = models.DateField()
+    timestamp = models.DateTimeField()
     commands = models.IntegerField()
     result = models.IntegerField()
     duration = models.FloatField()
