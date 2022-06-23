@@ -10,7 +10,7 @@ def calculate_result(start_pos, commands):
     unique_positions.add(current_pos)
 
     #Iterate over commands
-    for command in commands: 
+    for idx, command in enumerate(commands): 
         if command['direction'] == "east":
             direction = (1, 0)
         elif command['direction'] == "west":
@@ -25,6 +25,8 @@ def calculate_result(start_pos, commands):
 
             current_pos = tuple(map(lambda i, j: i - j, current_pos, direction))
             unique_positions.add(current_pos)
+    
+        print(idx)
     return len(unique_positions)
 
 

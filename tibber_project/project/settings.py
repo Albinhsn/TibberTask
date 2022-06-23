@@ -28,6 +28,9 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 
+#Increase request size (Neccessary to meet requirement of 10k commands)
+DATA_UPLOAD_MAX_NUMBER_FIELDS=200000
+
 # Application definition
 
 INSTALLED_APPS = [
