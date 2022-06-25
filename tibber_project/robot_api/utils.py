@@ -2,7 +2,6 @@
 
 from json import loads, dumps 
 
-
 def calculate_result(start_pos, commands):
     x,y = start_pos['x'], start_pos['y']
     y_lines = {
@@ -21,7 +20,7 @@ def calculate_result(start_pos, commands):
             }
         ]
     }
-    result = 0 
+    result = 1 
     for c in commands:
         if c['direction'] == "east":
             low = x
@@ -50,15 +49,32 @@ def calculate_result(start_pos, commands):
             
         check_new_line(line, coord, low, high)
         print(x_lines, y_lines)
-    
-    for line in x_lines:  
-        result += line['high'] - line['low']
-        #TODO Remove times the intersect
-    for line in y_lines:
-        result += line['high'] - line['low']
+    if y_lines[0] == [{"low":0,"high":0}]:
+        del y_lines[0]
 
-    #TODO Figure out a way to calc results
+    if [{"low":0,"high":0}] == x_lines[0]:
+        del y_lines[0]
+    for x_key, x_val in x_lines.items():  
+        print(result)
+        for coord in x_val:
+            result += get_difference_between_ints(coord['high'], coord['low'])    
+            for c in range(coord['low'], coord['high']):
+                if c in y_lines:
+                    for i in y_lines[c]:
+                        if i['high'] <= x_key >= i['low']:
+                            result -= 1 
+
+    for line in y_lines.values():
+        print(result)
+        for coord in line:
+            result += get_difference_between_ints(coord['high'], coord['low'])            
+    print(result)
     return result
+
+def get_difference_between_ints(x, y):
+    if x>0 and y>0:
+        return abs(y-x)
+    return abs(x-y)
 
 def check_new_line(line, coord, low, high):
     #print(line, coord, low, high)
