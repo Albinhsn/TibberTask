@@ -5,26 +5,26 @@ from json import loads, dumps
 
 def calculate_result(start_pos, commands):
 
-    current_pos = (start_pos['x'], start_pos['y'])
+    x,y = start_pos['x'], start_pos['y']
     unique_positions = set()
-    unique_positions.add(current_pos)
 
     #Iterate over commands
     for idx, command in enumerate(commands): 
         if command['direction'] == "east":
-            direction = (1, 0)
+            new_pos = [(x+i,y) for i in range(command['steps']+1)]
+            x += command['steps']
         elif command['direction'] == "west":
-            direction = (-1, 0)
+            new_pos = [(x-i,y) for i in range(command['steps']+1)]
+            x -=  command['steps'] 
         elif command['direction'] == "north":
-            direction = (0, 1)
+            new_pos = [(x,y+i) for i in range(command['steps']+1)]
+            y += command['steps']
         else:
             #Direction is south
-            direction = (0, -1)
-        #Calcing every step
-        for _ in range(command['steps']):
-
-            current_pos = tuple(map(lambda i, j: i - j, current_pos, direction))
-            unique_positions.add(current_pos)
+            new_pos = [(x,y-i) for i in range(1,command['steps']+1)]
+            y -= command['steps']
+        #Add every new pos to set
+        unique_positions.update(new_pos)
     
         print(idx)
     return len(unique_positions)
