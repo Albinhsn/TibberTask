@@ -1,185 +1,161 @@
 
 
 from json import loads, dumps 
-#TODO: Figure out way to improve speed and readability
 def calculate_result(start_pos, commands):
-    x,y = start_pos['x'], start_pos['y']
-    y_lines = {}
-    x_lines = {}
-    start_points = {
-            (x,y): 1
-            }
-    result = 1
-    first = ""
-    intersected = False
-    if commands[0]['direction'] == "south" or commands[0]['direction'] == "north":
-        y_lines[start_pos['x']] =[
-            {
-                "command": -1,
-                "low": start_pos['y'],
-                "high": start_pos['y']
-            }
-        ]
-        first = "y"
+    #Create current pos with x,y 
+    x_lines = {
+
+    }
+    y_lines = {
+
+    }
+    prev_axis = ""
+    current_position = start_pos['x'], start_pos['y']
+    count = 1
+    if commands[0]['direction'] == "north" or commands[0]['direction'] == "south":
+        y_lines[start_pos['x']] = [{'low': start_pos['y'], 'high': start_pos['y']}]
     else:
-        x_lines[start_pos['y']] = [
-            {
-                "command": -1,
-                "low": start_pos['y'],
-                "high": start_pos['y']
-            }
-        ]
-    for idx, c in enumerate(commands):
-        print( idx)
-        if c['direction'] == "east":
-            low = x
-            high = x + c['steps']
-            coord = y
-            line = x_lines
-            line_to_check = y_lines
-            x = high
-            axis = "x"
-        elif c['direction'] == "west": 
-            low = x - c['steps']
-            high = x
-            coord = y
-            line = x_lines
-            line_to_check = y_lines
-            x = low
-            axis = "x"
-        elif c['direction'] == "north":
-            low = y
-            high = y + c['steps']
-            coord = x
-            line = y_lines
-            line_to_check = x_lines
-            y = high
-            axis = "y"
+        x_lines[start_pos['y']] = [{'low': start_pos['x'], 'high': start_pos['x']}]
+    #Create start pos with XX and YY 
+    for idx, command in enumerate(commands):
+    #Create new line depending on direction
+        print("-----------")
+        print(f"command: {idx+1} direction is {command['direction']} and steps is {command['steps']}")
+        current_position, low, high, axis = create_new_line(current_position, command) 
+    #Check if new line intersects with smth on the other axis
+        if axis == "y":
+            count -= check_intersection(x_lines, y_lines, low, high, current_position[0], command['direction'])
         else:
-            low = y - c['steps']
-            high = y
-            coord = x
-            line = y_lines
-            line_to_check = x_lines
-            y = low 
-            axis = "y"
-
-        result -=  check_intersection(line_to_check, line, coord, low, high, idx, start_points, axis)
-       
-        check_new_line(line, coord, low, high, idx, c['direction'])
-        if (x,y) not in start_points:
-            start_points[(x,y)] = 1
-    #    print(x_lines, y_lines)
-        if first != axis and intersected == False:
-           intersected = check_first_line_intersected(start_pos, coord, low, high, axis, idx, c['direction'], len(commands))
-       # print_coordinates_visited(x_lines, y_lines)
-    
-   # print(f"result is {result} before calc cos {result* -1 +1} intersections")
-    for x_key, x_val in x_lines.items():  
+            count -= check_intersection(y_lines, x_lines, low, high, current_position[1], command['direction'])
         
-        for coord in x_val:
-            result += get_difference_between_ints(coord['high'], coord['low'])    
-      #      print(f"result = {result} after {coord} at x {x_key}")
-
-    for key, line in y_lines.items():
-        for coord in line:
-            result += get_difference_between_ints(coord['high'], coord['low'])  
-     #       print(f"result = {result} after {coord} at y {key}")
-    #print(f"pre last_command {result}")
-    #Check if last line intersected with smth
-    last_command = commands[-1]['direction']
-    if last_command  == "south":
-        if check_intersection_last_line(x_lines, x, low, start_pos, axis):
-            result -= 1
-    elif last_command == "north":
-        if check_intersection_last_line(x_lines, x, high, start_pos,axis):
-            result -= 1
-    elif last_command == "east":
-        if check_intersection_last_line(y_lines, y, high, start_pos, axis):
-            result -= 1
-    else:
-        if check_intersection_last_line(y_lines, y, low, start_pos, axis):
-            result -= 1
-   # print(f"after last_command {result}")
-    return result
-
-
-
-def check_first_line_intersected(start_pos, coord, low, high, axis, idx, direction, number_of_commands):
-    if axis == "y":
-        if coord == start_pos['x']:
-            if high>start_pos['y']>low and idx != number_of_commands-1:
-                return True
-            if idx == number_of_commands-1:
-                if direction == "north": 
-                    if high>=to_check>low:
-                        return True
-                else:
-                    if high>to_check>=low:
-                        return True
-    if axis == "x":
-        if coord == start_pos['y']:
-            if high>start_pos['x']>low and idx != number_of_commands-1:
-                return True
-            if idx == number_of_commands-1:
-                if direction == "east": 
-                    if high>=to_check>low:
-                        return True
-                else:
-                    if high>to_check>=low:
-                        return True
-    return False
-
-
-#Just checks if last lines high hits smth
-def check_intersection_last_line(line, coord, high, start_pos, axis):
-    print(f"last coord was {coord, high} or {high,coord}")
-    #TODO Check if it has already hit this spot  
-    #if coord in old_line:
-     #   for i in old_line[coord]:
-      #      if i['high']>=high>=i['low']:
-       #         return False
-    if high in line:
-        #print(line[high], coord)
-        for i in line[high]:
-            if axis == "y":
-                if i['high']>coord>i['low'] and (high, coord) != (start_pos['x'], start_pos['y']):
-                    return True
-            else:
-                if i['high']>coord>i['low'] and (coord, high) != (start_pos['x'], start_pos['y']):
-                    return True
-    return False
-
-
-def check_intersection(line, old_line, coord, low, high, idx, start_points, axis):
-    count = 0
-    for i in range(low, high+1):
-        if i in line:
-            for j in line[i]:
-                #TODO: Check if needed to check idx +-1
-#                print(f"j is {j}")
- #               print(f"coord is {coord}")
-                if j['high']>=coord>=j['low'] and idx + 1 != j['command'] and idx -1 != j['command']:
-                    if axis == "y":
-                        if (coord, i) in start_points:
-                            continue
-                    else:
-                        if (i, coord) in start_points:
-                            continue
-                    flag = False
-                    for k in range(j['low']+2,j['high']):
-                        if k in old_line:
-  #                          print(old_line[k])
-                            for z in old_line[k]:
-                                if z['high']>=i>=z['low']:
-                                    flag = True
-                                    break
-                    if not flag:
-                        count += 1
-   #                     print(f"found intersection at {j} and {coord}, {low}-{high}, {idx+1}")
-
+    #Add new line and add the difference of steps to count
+        prev = count
+        if axis == "y":
+            count += add_new_line(y_lines, low, high, current_position[0], command['direction'], axis, prev_axis)
+        else:
+            count += add_new_line(x_lines, low, high, current_position[1], command['direction'],axis, prev_axis)
+        print(f"added {count-prev}. Count is:{count}")
+        #print_coordinates_visited(x_lines, y_lines)
+        prev_axis = axis
     return count
+#Gets tuple of x,y and current command
+#Returns new x,y, high, low and axis
+def create_new_line(current_position, command):
+    if command['direction'] == "north":
+        axis = "y"
+        low = current_position[1]
+        high = current_position[1] + command['steps']
+        current_position = (current_position[0],current_position[1]+command['steps'])
+    elif command['direction'] == "south":
+        axis = "y"
+        low = current_position[1] - command['steps']
+        high = current_position[1] 
+        current_position = (current_position[0],current_position[1]-command['steps'])
+    elif command['direction'] == "east":
+        axis = "x"
+        low = current_position[0] 
+        high = current_position[0]+ command['steps']
+        current_position = (current_position[0]+command['steps'],current_position[1])
+    #Direction is west
+    else:
+        axis = "x"
+        low = current_position[0] - command['steps']
+        high = current_position[0]        
+        current_position = (current_position[0]-command['steps'],current_position[1])
 
+        
+    return current_position, low, high, axis
+
+
+
+#TODO: Figure out better name for 'p'
+#Checks if new line intersects with something on the other axis, if yes check if it already exists on the same axis
+#Returns the amount of times the line intersects 
+def check_intersection(line_to_check, same_line, low, high, p, direction):
+    
+    intersections = 0
+    if direction == "north" or direction == "east":
+        low += 1
+    else:
+        high -= 1
+    for i in range(low, high+1):
+        if i in line_to_check:
+            for line in line_to_check[i]:
+                if line['high']>=p>=line['low']:
+                    #TODO: If lines first point hits smth, don't let it
+                    #Found intersection on other axis
+                    if p in same_line:
+                        flag = False
+                        for j in same_line[p]:
+                            if j['high']>=i>=j['low']:
+                                flag = True
+                                break
+                        if flag:
+                            continue
+                    intersections += 1
+    print(f"found {intersections} intersections")
+    if direction == "north" or direction == "east":
+        low -= 1 
+    else:
+        high += 1
+    return intersections
+#Adds new line to lines
+#Returns number of points added
+def add_new_line(line, low, high, p, direction, axis, prev_axis):
+    count = abs(high-low) 
+    print(f"add_new_line count is {count}")
+    if p in line:
+        #Line exis after all existing lines
+        if low>line[p][-1]['high']:
+            line[p].append({'low': low, 'high': high})
+            
+        elif high<line[p][0]['low']:
+            line[p].insert(0, {'low': low, 'high': high})
+
+        else:  
+            l, h,prev_count = 0,0,0
+            for idx, val in enumerate(line[p]):
+                if val['low']>high:
+                    break
+                if low>val['high']:
+                    continue
+                if val['high']>=low>=val['low']:
+                    l = idx
+                if val['high']<high and low<val['low']:
+                    prev_count += 1 
+                prev_count += abs(val['high']- val['low']) 
+                h = idx
+            print(f"found {prev_count} in prev at {line[p]}, with p:{p}, low:{low}, high:{high}")
+            #TODO: When a new line gets added on the same axis and its coming from "outside and in" and doesn't go through but stops inbetween. Count needs to be reduced by one cos otherwise abs(low-high) gets scuffed
+            flag = False
+            print(f"low: {low}, pllow: {line[p][l]['low']}, high: {high}, phhigh: {line[p][h]['high']}, direction: {direction}")
+            if high<=line[p][h]['high']:
+                if direction == "north" or direction == "east":
+                    print("FLAG 1")
+                    flag = True
+            if low>=line[p][l]['low']:
+                if direction == "south" or direction == "west":
+                    print("FLAG 2 ")
+                    flag = True
+
+            if line[p][l]['low']<low:
+                low = line[p][l]['low']
+            
+            if line[p][h]['high']>high:
+                high = line[p][h]['high']
+            del line[p][l:h+1]
+            line[p].insert(l, {'low': low, 'high': high})
+            
+            count = abs(high-low) - prev_count
+            if flag and count > 0:
+                print("FLAGGERINO")
+                count -= 1
+
+            print(f"count became {count} from h:{high}, l:{low} and prev:{prev_count}")
+    else:
+        line[p] = [{'low': low, 'high': high}]
+    print(f"returning add_new_line count as {count}")
+    return count
 def print_coordinates_visited(x, y):
     s = set()
     for i in x: 
@@ -187,6 +163,7 @@ def print_coordinates_visited(x, y):
             if j['low'] == j['high']:
                 continue
             for k in range(j['low'], j['high']+1):
+                
                 s.add((k, i))
     for i in y:
         for j in y[i]:
@@ -197,90 +174,6 @@ def print_coordinates_visited(x, y):
     print(s)
     #print(f"result should be {len(s)}")
 
-def get_difference_between_ints(x, y): 
-    if x>0 and y>0:
-        return abs(y-x)
-    return abs(x-y)
-def check_new_line(line, coord, low, high, command_idx, direction):
-    #print(line, coord, low, high)
-    if coord in line:
-        if low >  line[coord][-1]['high']: 
-    #        print("Appended it cos low above last high")
-            line[coord].append({
-                "low": low,
-                "high": high,
-                "command": command_idx,
-                "direction": direction
-                })
-            return 
-        if high < line[coord][0]['low']:
-     #       print("Inserted it at 0 cos high below first low ")
-            line[coord].insert(0,{
-                "low": low,
-                "high": high,
-                "command": command_idx,
-                "direction": direction
-                })
-            return
-        lowest, highest = -1, -1 
-        for idx, l in enumerate(line[coord]): 
-            if l['low'] > high:
-                break
-            if l['high'] > low or (high > l['low'] and l['high'] >= low):
-                lowest = idx
-                
-            highest = idx
-        #Line exists inbetween already existing ones
-        if lowest == -1 and highest != len(line[coord])-1:
-            line[coord].insert(highest+1, {
-                    'low': low,
-                    'high': high,
-                    'command': command_idx,
-                    "direction": direction
-                })
-        #Line exists outside the bounds of current ones
-        elif lowest == -1:
-            #Line is lower
-            if line[coord][0]['low'] > low:
-      #          print("Inserted at 0")
-                line[coord].insert(0, {
-                    'low': low,
-                    'high': high,
-                    'command': command_idx,
-                    'direction': direction
-                    })
-            #Line is higher 
-            else:
-       #         print("Inserted in the back")
-                line[coord].insert(len(line[coord]), {
-                    'low': low,
-                    'high': high,
-                    "command": command_idx,
-                    "direction": direction
-                    }
-                )
-        #Line exists within already existing ones        
-        else:
-            if low > line[coord][lowest]['low']:
-                low =  line[coord][lowest]['low']
-            if high <  line[coord][highest]['high']:
-                high =  line[coord][highest]['high']    
-            highest += 1
-            del line[coord][lowest:highest]
-            line[coord].insert(lowest, {
-                    'low': low,
-                    'high': high,
-                    'command': command_idx,
-                    "direction": direction
-                })
-    #Line at coordinate didn't exist 
-    else:
-        line[coord] = [{
-            "low": low,
-            "high": high,
-            "command": command_idx,
-            "direction": direction
-        }]
 def execution_insert_to_json(exe):
     #transform execution object into dict
     exe = exe.__dict__
