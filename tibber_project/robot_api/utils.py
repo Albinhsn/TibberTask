@@ -17,10 +17,11 @@ def calculate_result(start_pos, commands):
     else:
         x_lines[start_pos['y']] = [{'low': start_pos['x'], 'high': start_pos['x']}]
     #Create start pos with XX and YY 
-    for idx, command in enumerate(commands):
+    #for idx, command in enumerate(commands):
+    for command in commands:
     #Create new line depending on direction
-        print("-----------")
-        print(f"command: {idx+1} direction is {command['direction']} and steps is {command['steps']}")
+        #print("-----------")
+        #print(f"command: {idx+1} direction is {command['direction']} and steps is {command['steps']}")
         current_position, low, high, axis = create_new_line(current_position, command) 
     #Check if new line intersects with smth on the other axis
         if axis == "y":
@@ -34,7 +35,7 @@ def calculate_result(start_pos, commands):
             count += add_new_line(y_lines, low, high, current_position[0], command['direction'], axis, prev_axis)
         else:
             count += add_new_line(x_lines, low, high, current_position[1], command['direction'],axis, prev_axis)
-        print(f"added {count-prev}. Count is:{count}")
+        #print(f"added {count-prev}. Count is:{count}")
         #print_coordinates_visited(x_lines, y_lines)
         prev_axis = axis
     return count
@@ -93,7 +94,7 @@ def check_intersection(line_to_check, same_line, low, high, p, direction):
                         if flag:
                             continue
                     intersections += 1
-    print(f"found {intersections} intersections")
+    #print(f"found {intersections} intersections")
     if direction == "north" or direction == "east":
         low -= 1 
     else:
@@ -103,7 +104,7 @@ def check_intersection(line_to_check, same_line, low, high, p, direction):
 #Returns number of points added
 def add_new_line(line, low, high, p, direction, axis, prev_axis):
     count = abs(high-low) 
-    print(f"add_new_line count is {count}")
+    #print(f"add_new_line count is {count}")
     if p in line:
         #Line exis after all existing lines
         if low>line[p][-1]['high']:
@@ -114,28 +115,30 @@ def add_new_line(line, low, high, p, direction, axis, prev_axis):
 
         else:  
             l, h,prev_count = 0,0,0
+            low_flag = False
             for idx, val in enumerate(line[p]):
                 if val['low']>high:
                     break
                 if low>val['high']:
                     continue
-                if val['high']>=low>=val['low']:
+                if val['low']<=low: #and not low_flag:
                     l = idx
+                    #low_flag = True
                 if val['high']<high and low<val['low']:
                     prev_count += 1 
                 prev_count += abs(val['high']- val['low']) 
                 h = idx
-            print(f"found {prev_count} in prev at {line[p]}, with p:{p}, low:{low}, high:{high}")
+            #print(f"found {prev_count} in prev at {line[p]}, with p:{p}, low:{low}, high:{high}")
             #TODO: When a new line gets added on the same axis and its coming from "outside and in" and doesn't go through but stops inbetween. Count needs to be reduced by one cos otherwise abs(low-high) gets scuffed
             flag = False
-            print(f"low: {low}, pllow: {line[p][l]['low']}, high: {high}, phhigh: {line[p][h]['high']}, direction: {direction}")
+            #print(f"low: {low}, pllow: {line[p][l]['low']}, high: {high}, phhigh: {line[p][h]['high']}, direction: {direction}")
             if high<=line[p][h]['high']:
                 if direction == "north" or direction == "east":
-                    print("FLAG 1")
+                    #print("FLAG 1")
                     flag = True
             if low>=line[p][l]['low']:
                 if direction == "south" or direction == "west":
-                    print("FLAG 2 ")
+                    #print("FLAG 2 ")
                     flag = True
 
             if line[p][l]['low']<low:
@@ -148,13 +151,13 @@ def add_new_line(line, low, high, p, direction, axis, prev_axis):
             
             count = abs(high-low) - prev_count
             if flag and count > 0:
-                print("FLAGGERINO")
+                #print("FLAGGERINO")
                 count -= 1
 
-            print(f"count became {count} from h:{high}, l:{low} and prev:{prev_count}")
+            #print(f"count became {count} from h:{high}, l:{low} and prev:{prev_count}")
     else:
         line[p] = [{'low': low, 'high': high}]
-    print(f"returning add_new_line count as {count}")
+    #print(f"returning add_new_line count as {count}")
     return count
 def print_coordinates_visited(x, y):
     s = set()
