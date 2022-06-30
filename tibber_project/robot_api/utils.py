@@ -9,67 +9,56 @@ def calculate_result(start_pos, commands):
     y_lines = {
 
     }
-    prev_axis = ""
-    current_position = start_pos['x'], start_pos['y']
+    x,y = start_pos['x'], start_pos['y']
     count = 1
     if commands[0]['direction'] == "north" or commands[0]['direction'] == "south":
-        y_lines[start_pos['x']] = [{'low': start_pos['y'], 'high': start_pos['y']}]
+        y_lines[x] = [{'low': y, 'high': y}]
     else:
-        x_lines[start_pos['y']] = [{'low': start_pos['x'], 'high': start_pos['x']}]
+        x_lines[y] = [{'low': x, 'high': x}]
     #Create start pos with XX and YY 
-    #for idx, command in enumerate(commands):
     for command in commands:
     #Create new line depending on direction
-        #print("-----------")
-        #print(f"command: {idx+1} direction is {command['direction']} and steps is {command['steps']}")
-        current_position, low, high, axis = create_new_line(current_position, command) 
+        x,y, low, high, axis = create_new_line(x,y, command) 
     #Check if new line intersects with smth on the other axis
         if axis == "y":
-            count -= check_intersection(x_lines, y_lines, low, high, current_position[0], command['direction'])
+            count -= check_intersection(x_lines, y_lines, low, high, x, command['direction'])
         else:
-            count -= check_intersection(y_lines, x_lines, low, high, current_position[1], command['direction'])
+            count -= check_intersection(y_lines, x_lines, low, high, y, command['direction'])
         
     #Add new line and add the difference of steps to count
-        prev = count
         if axis == "y":
-            count += add_new_line(y_lines, low, high, current_position[0], command['direction'], axis, prev_axis)
+            count += add_new_line(y_lines, low, high, x, command['direction'])
         else:
-            count += add_new_line(x_lines, low, high, current_position[1], command['direction'],axis, prev_axis)
-        #print(f"added {count-prev}. Count is:{count}")
-        #print_coordinates_visited(x_lines, y_lines)
-        prev_axis = axis
+            count += add_new_line(x_lines, low, high, y, command['direction'])
     return count
 #Gets tuple of x,y and current command
 #Returns new x,y, high, low and axis
-def create_new_line(current_position, command):
+def create_new_line(x,y, command):
     if command['direction'] == "north":
         axis = "y"
-        low = current_position[1]
-        high = current_position[1] + command['steps']
-        current_position = (current_position[0],current_position[1]+command['steps'])
+        low = y
+        y += command['steps']
+        high = y 
     elif command['direction'] == "south":
         axis = "y"
-        low = current_position[1] - command['steps']
-        high = current_position[1] 
-        current_position = (current_position[0],current_position[1]-command['steps'])
+        high = y 
+        y -= command['steps']
+        low = y 
     elif command['direction'] == "east":
         axis = "x"
-        low = current_position[0] 
-        high = current_position[0]+ command['steps']
-        current_position = (current_position[0]+command['steps'],current_position[1])
+        low = x 
+        x += command['steps']
+        high = x
     #Direction is west
     else:
         axis = "x"
-        low = current_position[0] - command['steps']
-        high = current_position[0]        
-        current_position = (current_position[0]-command['steps'],current_position[1])
-
-        
-    return current_position, low, high, axis
+        high = x        
+        x -= command['steps']
+        low = x         
+    return x,y,low, high, axis
 
 
 
-#TODO: Figure out better name for 'p'
 #Checks if new line intersects with something on the other axis, if yes check if it already exists on the same axis
 #Returns the amount of times the line intersects 
 def check_intersection(line_to_check, same_line, low, high, p, direction):
@@ -83,7 +72,6 @@ def check_intersection(line_to_check, same_line, low, high, p, direction):
         if i in line_to_check:
             for line in line_to_check[i]:
                 if line['high']>=p>=line['low']:
-                    #TODO: If lines first point hits smth, don't let it
                     #Found intersection on other axis
                     if p in same_line:
                         flag = False
@@ -94,15 +82,17 @@ def check_intersection(line_to_check, same_line, low, high, p, direction):
                         if flag:
                             continue
                     intersections += 1
-    #print(f"found {intersections} intersections")
     if direction == "north" or direction == "east":
         low -= 1 
     else:
         high += 1
     return intersections
+
+
+
 #Adds new line to lines
 #Returns number of points added
-def add_new_line(line, low, high, p, direction, axis, prev_axis):
+def add_new_line(line, low, high, p, direction):
     count = abs(high-low) 
     #print(f"add_new_line count is {count}")
     if p in line:
@@ -112,71 +102,47 @@ def add_new_line(line, low, high, p, direction, axis, prev_axis):
             
         elif high<line[p][0]['low']:
             line[p].insert(0, {'low': low, 'high': high})
-
+        #Line overlaps another or is inbetween two
         else:  
             l, h,prev_count = 0,0,0
-            low_flag = False
             for idx, val in enumerate(line[p]):
                 if val['low']>high:
                     break
                 if low>val['high']:
+                    l = idx + 1
                     continue
-                if val['low']<=low: #and not low_flag:
-                    l = idx
-                    #low_flag = True
                 if val['high']<high and low<val['low']:
                     prev_count += 1 
                 prev_count += abs(val['high']- val['low']) 
                 h = idx
-            #print(f"found {prev_count} in prev at {line[p]}, with p:{p}, low:{low}, high:{high}")
-            #TODO: When a new line gets added on the same axis and its coming from "outside and in" and doesn't go through but stops inbetween. Count needs to be reduced by one cos otherwise abs(low-high) gets scuffed
+            #TODO: If l>: insert return count 
+            #Line is inbetween two lines
+            
+            #Line overlaps with 1 other
             flag = False
-            #print(f"low: {low}, pllow: {line[p][l]['low']}, high: {high}, phhigh: {line[p][h]['high']}, direction: {direction}")
             if high<=line[p][h]['high']:
                 if direction == "north" or direction == "east":
-                    #print("FLAG 1")
                     flag = True
             if low>=line[p][l]['low']:
                 if direction == "south" or direction == "west":
-                    #print("FLAG 2 ")
                     flag = True
-
+            
+            #Calculate new low
             if line[p][l]['low']<low:
                 low = line[p][l]['low']
-            
+            #Calculate new high
             if line[p][h]['high']>high:
                 high = line[p][h]['high']
+            #Remove old line and insert new one
             del line[p][l:h+1]
             line[p].insert(l, {'low': low, 'high': high})
-            
+            #count is difference between new line and old line(s)
             count = abs(high-low) - prev_count
             if flag and count > 0:
-                #print("FLAGGERINO")
                 count -= 1
-
-            #print(f"count became {count} from h:{high}, l:{low} and prev:{prev_count}")
     else:
         line[p] = [{'low': low, 'high': high}]
-    #print(f"returning add_new_line count as {count}")
     return count
-def print_coordinates_visited(x, y):
-    s = set()
-    for i in x: 
-        for j in x[i]:
-            if j['low'] == j['high']:
-                continue
-            for k in range(j['low'], j['high']+1):
-                
-                s.add((k, i))
-    for i in y:
-        for j in y[i]:
-            if j['low'] == j['high']:
-                continue
-            for k in range(j['low'], j['high']+1):
-                s.add((i,k))
-    print(s)
-    #print(f"result should be {len(s)}")
-
 def execution_insert_to_json(exe):
     #transform execution object into dict
     exe = exe.__dict__
