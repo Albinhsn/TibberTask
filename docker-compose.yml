@@ -6,7 +6,7 @@ services:
         db:
                 image: postgres:13-alpine
                 volumes:
-                        - data:/data/db:/var/lib/postgresql/data
+                        - ./data:/data/db/var/lib/postgresql/data
                 environment:
                         - POSTGRES_DB=postgres
                         - POSTGRES_USER=postgres

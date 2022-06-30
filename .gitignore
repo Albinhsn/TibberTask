@@ -34,3 +34,5 @@ tibber_project/robot_api/.utils.py.svk
 tibber_project/robot_api/.utils.py.svl
 tibber_project/robot_api/.utils.py.svm
 *.svj
+data/*
+*.un~
