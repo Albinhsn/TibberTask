@@ -3,15 +3,10 @@
 from json import loads, dumps
 from re import I 
 def calculate_result(start_pos, commands):
-    x_lines = {
-
-    }
-    y_lines = {
-
-    }
+    x_lines = {}
+    y_lines = {}
     x,y = start_pos['x'], start_pos['y']
-    count = 0
-    
+    count = 0    
     for command in commands:
         x,y, low, high, axis = create_new_line(x,y, command) 
         if axis == "y":
@@ -42,6 +37,7 @@ def create_new_line(x,y, command):
         x -= command['steps']
         low = x         
     return x,y,low, high, axis
+
 def print_coordinates_visited(x, y):
     s = set()
     for i in x: 
@@ -95,6 +91,8 @@ def add_new_line(line, low, high, p, steps):
     else:
         line[p] = [{'low': low, 'high': high}]        
     return count  
+
+
 def execution_insert_to_json(exe):
     #transform execution object into dict
     exe = exe.__dict__
