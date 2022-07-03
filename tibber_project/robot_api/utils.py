@@ -1,6 +1,7 @@
 
 
 from json import loads, dumps
+from re import I
 def calculate_result(start_pos, commands):
     if len(commands) == 0:
         return 1 
@@ -13,8 +14,9 @@ def calculate_result(start_pos, commands):
     
     x,y = start_pos['x'], start_pos['y']
     result = 0  
+    
     #Iterate over the given commands
-    #Calculate the position, the low and high points of the and the axis of the new line
+    #Calculate the position, the low and high points and the axis of the new line
     for command in commands:
         x,y, low, high, axis = create_new_line(x,y, command) 
         #Add the new line and calculate the amount of new points it creates on the same axis
@@ -53,7 +55,7 @@ def create_new_line(x,y, command):
 
 
 
-#Checks how many times the lines on the different axis intersected 
+#Checks how many times the lines on the different axes intersected 
 #Returns the number of intersections
 def check_intersection(x_lines, y_lines, x_keys, y_keys):
     intersections = 0
@@ -68,7 +70,7 @@ def check_intersection(x_lines, y_lines, x_keys, y_keys):
 
 #Adds or inserts a new line to the lines
 #Also adds a new key to keys if present
-#Returns back the number of new points created by the line
+#Returns back the number of new points 
 def add_new_line(lines, low, high, key, steps, keys):
     result = steps + 1 
     if key in lines:
