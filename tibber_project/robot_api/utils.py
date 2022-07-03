@@ -1,20 +1,23 @@
 
 
 from json import loads, dumps
-from re import I 
 def calculate_result(start_pos, commands):
+    if len(commands) == 0:
+        return 1  
     x_lines = {}
     y_lines = {}
     x,y = start_pos['x'], start_pos['y']
-    count = 0    
+    count = 0  
     for command in commands:
         x,y, low, high, axis = create_new_line(x,y, command) 
         if axis == "y":
-            count += add_new_line(y_lines, low, high, x, command['steps'])        
+            count += add_new_line(y_lines, low, high, x, command['steps'])                            
         else:
             count += add_new_line(x_lines, low, high, y, command['steps'])
     count -= check_intersection(x_lines, y_lines)    
     return count
+
+
 def create_new_line(x,y, command):
     if command['direction'] == "north":
         axis = "y"
@@ -49,47 +52,44 @@ def print_coordinates_visited(x, y):
     return len(s)
 
 
-def check_intersection(x_lines, y_lines):    
+def check_intersection(x_lines, y_lines):     
     intersections = 0
     for key,val in x_lines.items():
         for i in val:
-            for j in range(i['low'], i['high']+1):
-                if j in y_lines:
+            for j in [y for y in y_lines.keys() if i[1]>=y>=i[0]]:
                     for k in y_lines[j]:
-                        if k['high']>=key>=k['low']:
+                        if k[1]>=key>=k[0]:
                             intersections += 1                            
-                            break            
+                            break 
     return intersections
 
 def add_new_line(line, low, high, p, steps):
     count = steps + 1 
     if p in line:
-        if low>line[p][-1]['high']:
-            line[p].append({'low': low, 'high': high})
-        elif high<line[p][0]['low']:
-            line[p].insert(0, {'low': low, 'high': high})
+        if low>line[p][-1][1]:
+            line[p].append((low,high))
+        elif high<line[p][0][0]:
+            line[p].insert(0, (low,high))
         else:  
             l, h,prev_count = 0,0,0
             for idx, val in enumerate(line[p]):
-                if val['low']>high:
+                if val[0]>high:
                     break
-                if low>val['high']:
+                if low>val[1]:
                     l = idx + 1
                     continue
-                if val['high']>=high and val['low']<=low:
-                    return 0
-                prev_count += abs(val['high']- val['low']) + 1
-                h = idx
+                prev_count += abs(val[1]- val[0]) + 1
+                h = idx 
             
-            if line[p][l]['low']<low:
-                low = line[p][l]['low']
-            if line[p][h]['high']>high:
-                high = line[p][h]['high']
+            if line[p][l][0]<low:
+                low = line[p][l][0]
+            if line[p][h][1]>high:
+                high = line[p][h][1]
             del line[p][l:h+1]
-            line[p].insert(l, {'low': low, 'high': high})
+            line[p].insert(l, (low,high))
             count = abs(high-low) + 1 - prev_count
     else:
-        line[p] = [{'low': low, 'high': high}]        
+        line[p] = [(low,high)]        
     return count  
 
 
