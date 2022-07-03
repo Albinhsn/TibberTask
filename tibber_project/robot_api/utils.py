@@ -3,21 +3,31 @@
 from json import loads, dumps
 def calculate_result(start_pos, commands):
     if len(commands) == 0:
-        return 1  
+        return 1 
+    #Lines are stored with position on the other axis as key, then a list of tuples containing the lowest and highest point on the line      
     x_lines = {}
+    x_keys = []
+
     y_lines = {}
+    y_keys = []
+    
     x,y = start_pos['x'], start_pos['y']
-    count = 0  
+    result = 0  
+    #Iterate over the given commands
+    #Calculate the position, the low and high points of the and the axis of the new line
     for command in commands:
         x,y, low, high, axis = create_new_line(x,y, command) 
+        #Add the new line and calculate the amount of new points it creates on the same axis
         if axis == "y":
-            count += add_new_line(y_lines, low, high, x, command['steps'])                            
+            result += add_new_line(y_lines, low, high, x, command['steps'], y_keys)                            
         else:
-            count += add_new_line(x_lines, low, high, y, command['steps'])
-    count -= check_intersection(x_lines, y_lines)    
-    return count
+            result += add_new_line(x_lines, low, high, y, command['steps'], x_keys)
+    #Calculate and remove the number of intersections between the axes 
+    result -= check_intersection(x_lines, y_lines, x_keys, y_keys)    
+    return result
 
-
+#Takes in current position and the command
+#Returns the new position, the low and high of the new line and the axis for it
 def create_new_line(x,y, command):
     if command['direction'] == "north":
         axis = "y"
@@ -41,58 +51,64 @@ def create_new_line(x,y, command):
         low = x         
     return x,y,low, high, axis
 
-def print_coordinates_visited(x, y):
-    s = set()
-    for i in x: 
-        for j in x[i]:
-            s.update([(k,i) for k in range(j['low'], j['high']+1)])
-    for i in y:
-        for j in y[i]:
-            s.update([(i,k) for k in range(j['low'], j['high']+1)])
-    return len(s)
 
 
-def check_intersection(x_lines, y_lines):     
+#Checks how many times the lines on the different axis intersected 
+#Returns the number of intersections
+def check_intersection(x_lines, y_lines, x_keys, y_keys):
     intersections = 0
-    for key,val in x_lines.items():
-        for i in val:
-            for j in [y for y in y_lines.keys() if i[1]>=y>=i[0]]:
-                    for k in y_lines[j]:
-                        if k[1]>=key>=k[0]:
-                            intersections += 1                            
-                            break 
+    for xkey in x_keys:
+        for x_line in x_lines[xkey]:
+            for y_key in [y_key for y_key in y_keys if x_line[1]>=y_key>=x_line[0]]:
+                for y_line in y_lines[y_key]:
+                    if y_line[1]>=xkey>=y_line[0]:                    
+                        intersections += 1
+                        break
     return intersections
 
-def add_new_line(line, low, high, p, steps):
-    count = steps + 1 
-    if p in line:
-        if low>line[p][-1][1]:
-            line[p].append((low,high))
-        elif high<line[p][0][0]:
-            line[p].insert(0, (low,high))
+#Adds or inserts a new line to the lines
+#Also adds a new key to keys if present
+#Returns back the number of new points created by the line
+def add_new_line(lines, low, high, key, steps, keys):
+    result = steps + 1 
+    if key in lines:
+        #Line exist above every other line
+        if low>lines[key][-1][1]:
+            lines[key].append((low,high))
+        #Line exist below every other line
+        elif high<lines[key][0][0]:
+            lines[key].insert(0, (low,high))
+        #Line exist inbetween or inside existing ones
         else:  
-            l, h,prev_count = 0,0,0
-            for idx, val in enumerate(line[p]):
-                if val[0]>high:
+            #Iterate over current lines to find location of the new line
+            low_idx, high_idx, prev_count = 0,0,0            
+            for line_idx, line in enumerate(lines[key]):
+                if line[0]>high:
                     break
-                if low>val[1]:
-                    l = idx + 1
+                if low>line[1]:
+                    low_idx = line_idx + 1
                     continue
-                prev_count += abs(val[1]- val[0]) + 1
-                h = idx 
+                prev_count += abs(line[1]- line[0]) + 1
+                high_idx = line_idx 
             
-            if line[p][l][0]<low:
-                low = line[p][l][0]
-            if line[p][h][1]>high:
-                high = line[p][h][1]
-            del line[p][l:h+1]
-            line[p].insert(l, (low,high))
-            count = abs(high-low) + 1 - prev_count
+            #Assigns low and high for the new line
+            if lines[key][low_idx][0]<low:
+                low = lines[key][low_idx][0]
+            if lines[key][high_idx][1]>high:
+                high = lines[key][high_idx][1]
+            
+            #Deletes the previous lines and inserts the combined one
+            del lines[key][low_idx:high_idx+1]
+            lines[key].insert(low_idx, (low,high))
+            #Count is difference between the length of the new line and result of points from the previous line
+            result = abs(high-low) + 1 - prev_count
+    #No Lines existed on the given key 
     else:
-        line[p] = [(low,high)]        
-    return count  
+        lines[key] = [(low,high)]        
+        keys.append(key)
+    return result  
 
-
+#Reformats Execution object
 def execution_insert_to_json(exe):
     #transform execution object into dict
     exe = exe.__dict__
